@@ -11,15 +11,18 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>routify-llm-core</artifactId>
+    <artifactId>routify-llm-all</artifactId>
     <packaging>jar</packaging>
 
 
-    <name>routify-llm-core</name>
-    <description>The core routing engine and scoring algorithms for Routify-LLM.</description>
+    <name>routify-llm-all</name>
+    <description>Include all routify llm modules, out-of-the-box.</description>
     <url>https://github.com/PanJung99/routify-llm</url>
 
     <dependencies>
-
+        <dependency>
+            <groupId>io.github.panjung99</groupId>
+            <artifactId>routify-llm-core</artifactId>
+        </dependency>
     </dependencies>
 </project>
