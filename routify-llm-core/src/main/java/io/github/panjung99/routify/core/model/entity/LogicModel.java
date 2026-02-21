@@ -18,9 +18,9 @@ public class LogicModel {
     private String name;
 
     /**
-     * 逻辑模型对应的服务商模型
+     * 逻辑模型与服务商模型的绑定关系
      */
-    private List<VendorModel> vendorModels;
+    private List<ModelBinding> bindings;
 
     /**
      * 是否免费

@@ -3,10 +3,7 @@ package io.github.panjung99.routify.core.example;
 import io.github.panjung99.routify.core.client.RoutifyClient;
 import io.github.panjung99.routify.core.model.dto.RoutifyRequest;
 import io.github.panjung99.routify.core.model.dto.RoutifyResponse;
-import io.github.panjung99.routify.core.model.entity.ApiKey;
-import io.github.panjung99.routify.core.model.entity.LogicModel;
-import io.github.panjung99.routify.core.model.entity.Vendor;
-import io.github.panjung99.routify.core.model.entity.VendorModel;
+import io.github.panjung99.routify.core.model.entity.*;
 import io.github.panjung99.routify.core.model.enums.ModelCategory;
 import io.github.panjung99.routify.core.model.enums.VendorType;
 import io.github.panjung99.routify.core.repository.ConfigRepository;
@@ -25,12 +22,14 @@ public class HelloWorld {
         VendorModel vendorModel = new VendorModel();
         vendorModel.setVendor(vendor);
         vendorModel.setCategory(ModelCategory.chat);
+        ModelBinding binding = new ModelBinding();
+        binding.setVendorModel(vendorModel);
 
         LogicModel model = new LogicModel();
         model.setName("");
         model.setCategory(ModelCategory.chat);
         model.setIsFree(false);
-        model.setVendorModels(Arrays.asList(vendorModel));
+        model.setBindings(Arrays.asList(binding));
 
         ConfigRepository simpleRepository = new ConfigRepository() {
             @Override
