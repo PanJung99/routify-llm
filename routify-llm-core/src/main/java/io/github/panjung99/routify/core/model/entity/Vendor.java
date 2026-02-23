@@ -3,28 +3,26 @@ package io.github.panjung99.routify.core.model.entity;
 import io.github.panjung99.routify.core.model.enums.VendorType;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * 服务商基本信息表实体类
+ * Vendor entity representing an AI service provider.
+ * Contains basic information about the vendor including API endpoints and type.
  */
 @Data
 public class Vendor {
 
     /**
-     * 服务商名称
+     * Unique identifier for the vendor.
      */
-    private String name;
+    private String vendorId;
 
     /**
-     * 服务商类型
+     * Type of vendor defining the service provider.
+     * Examples: OPEN_AI, DEEP_SEEK, GLM, DOU_BAO, XUN_FEI, GEMINI
      */
     private VendorType vendorType;
 
-    private List<ApiKey> apiKeys;
-
     /**
-     * API基础地址
+     * Base URL for the vendor's API endpoints.
      */
     private String apiBaseUrl;
 

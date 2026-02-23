@@ -1,34 +1,48 @@
 package io.github.panjung99.routify.core.repository;
 
-import io.github.panjung99.routify.core.model.entity.ApiKey;
-import io.github.panjung99.routify.core.model.entity.LogicModel;
-import io.github.panjung99.routify.core.model.entity.Vendor;
+import io.github.panjung99.routify.core.model.entity.*;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Configuration Repository interface for managing LLM routing configurations.
+ * Implementations can choose data sources (memory, database, config center, etc.)
+ * and add caching as needed.
+ */
 public interface ConfigRepository {
+    
     /**
-     * 根据逻辑模型名称获取对应的映射配置。
-     * 实现方可以自由选择数据来源（内存、数据库、配置中心等），并可自行添加缓存。
+     * Retrieves basic information for a logical model by its name.
+     * 
+     * @param modelName the name of the logical model to retrieve
+     * @return Optional containing the LogicModel if found, empty otherwise
      */
     Optional<LogicModel> getModel(String modelName);
 
     /**
-     * 根据厂商名称获取厂商的完整配置。
+     * Retrieves all available vendor models for a specific logical model.
+     * These are the actual model implementations that can handle requests
+     * for the given logical model.
+     * 
+     * @param logicModelName the name of the logical model
+     * @return list of VendorModel instances that can serve the logical model
      */
-    Optional<Vendor> getVendor(String vendorName);
+    List<VendorModel> getVendorModels(String logicModelName);
 
     /**
-     * 根据 API Key 的值获取对应的配置（用于配额管理等场景）。
+     * Retrieves complete vendor configuration by vendor ID.
+     * 
+     * @param vendorId the unique identifier of the vendor
+     * @return Optional containing the Vendor if found, empty otherwise
      */
-    Optional<ApiKey> getApiKey(String keyValue);
-
+    Optional<Vendor> getVendor(String vendorId);
 
     /**
-     * 可选：获取所有映射关系（类似 listAllVendors）。
+     * Retrieves all API keys for a specific vendor.
+     * 
+     * @param vendorId the unique identifier of the vendor
+     * @return list of ApiKey instances belonging to the vendor
      */
-    default List<LogicModel> listAllMappings() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    List<ApiKey> getApiKeysByVendor(String vendorId);
 }
