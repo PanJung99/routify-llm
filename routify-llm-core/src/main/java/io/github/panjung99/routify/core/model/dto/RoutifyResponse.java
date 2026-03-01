@@ -1,13 +1,38 @@
 package io.github.panjung99.routify.core.model.dto;
 
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
  * OpenAI 聊天API响应对象
  * 完全遵循 OpenAI API 规范 (https://platform.openai.com/docs/api-reference/chat/object)
  */
+@Data
 public class RoutifyResponse {
+
+    @Data
+    // ========== 错误对象定义 ==========
+    public static class Error {
+        private String code;       // 错误码，如 "MODEL_NOT_FOUND"
+        private String message;    // 人类可读的错误描述
+        private String type;       // 错误类型（可选），如 "invalid_request_error"
+        private Object param;      // 导致错误的参数（可选）
+    }
+
+    // 在 RoutifyResponse 中添加静态工厂方法
+    public static RoutifyResponse error(String code, String message) {
+        RoutifyResponse response = new RoutifyResponse();
+        Error error = new Error();
+        error.setCode(code);
+        error.setMessage(message);
+        response.setError(error);
+        return response;
+    }
+
+    // 新增错误字段：当出现业务错误时填充此字段，成功时为 null
+    private Error error;
 
     /**
      * 必需参数：模型生成的响应选项列表

@@ -1,7 +1,23 @@
 package io.github.panjung99.routify.core.client;
 
-/**
- * 路由上下文（包含请求信息、用户传入的成本偏好等）
- */
+import io.github.panjung99.routify.core.model.entity.LogicModel;
+import io.github.panjung99.routify.core.model.entity.VendorModel;
+import io.github.panjung99.routify.core.repository.ConfigRepository;
+import io.github.panjung99.routify.core.router.metrics.MetricsStorageManager;
+import lombok.Data;
+
+import java.util.List;
+
+
+@Data
 public class RoutingContext {
+
+    private MetricsStorageManager metricsManager;
+
+    private ConfigRepository configRepository;
+
+    private LogicModel model;
+
+    private List<VendorModel> vendorModels;
+
 }

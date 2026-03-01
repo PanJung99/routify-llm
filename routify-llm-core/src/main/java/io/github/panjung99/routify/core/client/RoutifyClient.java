@@ -1,17 +1,40 @@
 package io.github.panjung99.routify.core.client;
 
-import io.github.panjung99.routify.core.model.dto.RoutifyChunk;
+import io.github.panjung99.routify.core.adapter.ChatAdapter;
+import io.github.panjung99.routify.core.apikey.ApiKeyRoutingStrategy;
+import io.github.panjung99.routify.core.apikey.strategy.RoundRobinApiKeyRoutingStrategy;
 import io.github.panjung99.routify.core.model.dto.RoutifyRequest;
 import io.github.panjung99.routify.core.model.dto.RoutifyResponse;
+import io.github.panjung99.routify.core.model.entity.*;
+import io.github.panjung99.routify.core.model.enums.ModelCategory;
+import io.github.panjung99.routify.core.model.enums.VendorType;
 import io.github.panjung99.routify.core.repository.ConfigRepository;
+import io.github.panjung99.routify.core.router.VendorRoutingStrategy;
+import io.github.panjung99.routify.core.router.metrics.DefaultVendorMetricsRecorder;
+import io.github.panjung99.routify.core.router.metrics.LocalVendorMetrics;
+import io.github.panjung99.routify.core.router.metrics.MetricsStorageManager;
+import io.github.panjung99.routify.core.router.strategy.PerformanceFirstVendorRoutingStrategy;
 import lombok.Builder;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Optional;
 
 @Builder
 public class RoutifyClient {
 
     private ConfigRepository configRepository;
+
+    @Builder.Default
+    private VendorRoutingStrategy routingStrategy = new PerformanceFirstVendorRoutingStrategy();
+
+    @Builder.Default
+    private MetricsStorageManager metricsStorageManager = new MetricsStorageManager();
+
+    @Builder.Default
+    private DefaultVendorMetricsRecorder metricsRecorder = new DefaultVendorMetricsRecorder(0.3);
+
+    @Builder.Default
+    private ApiKeyRoutingStrategy apiKeyRoutingStrategy = new RoundRobinApiKeyRoutingStrategy();
 
     /**
      * 阻塞式非流式调用，返回完整响应。
@@ -20,7 +43,63 @@ public class RoutifyClient {
      * @return 模型响应
      */
     public RoutifyResponse chat(RoutifyRequest request) {
-        return null;
+        RoutingContext context = new RoutingContext();
+        context.setMetricsManager(metricsStorageManager);
+
+        String modelName = request.getModel();
+
+        if (configRepository == null) {
+            throw new RuntimeException("");
+        }
+        Optional<LogicModel> logicModel = configRepository.getModel(modelName);
+        if (!logicModel.isPresent()) {
+            // 404
+            return RoutifyResponse.error("MODEL_NOT_FOUND", "The model does not exist.");
+        }
+        context.setModel(logicModel.get());
+
+        List<VendorModel> vendorModels = configRepository.getVendorModels(logicModel.get().getName());
+        if (vendorModels == null || vendorModels.isEmpty()) {
+            return RoutifyResponse.error("TODO", "");
+        }
+        context.setVendorModels(vendorModels);
+        // TODO 校验数据合法性
+
+        if (!ModelCategory.chat.equals(logicModel.get().getCategory())) {
+            return RoutifyResponse.error("UNSUPPORTED_MODEL", "The model is not a chat model.");
+        }
+
+        VendorModel vendorModel = routingStrategy.route(context);
+        if (vendorModel == null) {
+            // TODO fallback
+            return null;
+        }
+        Vendor vendor = configRepository.getVendor(vendorModel.getVendorId())
+                .orElseThrow(() -> new RuntimeException(""));
+        List<ApiKey> apiKeys = configRepository.getApiKeysByVendor(vendor.getVendorId());
+
+        ApiKey apiKey = apiKeyRoutingStrategy.route(apiKeys, vendorModel.getVendorModelId());
+
+
+        VendorType vendorType = vendor.getVendorType();
+        ChatAdapter chatAdapter = ChatAdapter.getAdapter(vendorType);
+
+        long start = System.currentTimeMillis();
+        boolean success = false;
+        LocalVendorMetrics metrics = metricsStorageManager.getOrCreate(vendorModel.getVendorModelId());
+        metricsRecorder.incrementConcurrency(metrics);
+        try {
+            RoutifyResponse response = chatAdapter.chat(request, vendorModel, apiKey, context);
+            success = true; //TODO 此处是否成功需要写逻辑判断 或者失败则由子类抛异常
+            return response;
+        } catch (Exception e) {
+            return RoutifyResponse.error("VENDOR_ERROR", e.getMessage());
+        } finally {
+            long latency = System.currentTimeMillis() - start;
+            metricsRecorder.record(metrics, latency, success);
+            metricsRecorder.decrementConcurrency(metrics);
+        }
+
     }
 
     /**
@@ -31,29 +110,5 @@ public class RoutifyClient {
      */
     public void chatStream(RoutifyRequest request, StreamResponseHandler handler) {
 
-    }
-
-    /**
-     * 响应式非流式调用，返回 Mono<RoutifyResponse>。
-     * <p>
-     * 注意：如果底层 VendorAdapter 的实现是阻塞的，该 Mono 会在提供的阻塞调度器上执行，避免阻塞事件循环。
-     *
-     * @param request 请求参数
-     * @return Mono 包装的响应
-     */
-    public Mono<RoutifyResponse> chatReactive(RoutifyRequest request) {
-        return null;
-    }
-
-    /**
-     * 响应式流式调用，直接返回 Flux<RoutifyChunk>。
-     * <p>
-     * 底层 VendorAdapter 的 chatStream 应返回 Flux，此处直接透传。
-     *
-     * @param request 请求参数
-     * @return 流式数据块 Flux
-     */
-    public Flux<RoutifyChunk> chatStreamReactive(RoutifyRequest request) {
-        return null;
     }
 }
