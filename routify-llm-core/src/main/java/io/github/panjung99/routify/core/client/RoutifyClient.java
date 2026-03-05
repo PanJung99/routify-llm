@@ -89,7 +89,7 @@ public class RoutifyClient {
         LocalVendorMetrics metrics = metricsStorageManager.getOrCreate(vendorModel.getVendorModelId());
         metricsRecorder.incrementConcurrency(metrics);
         try {
-            RoutifyResponse response = chatAdapter.chat(request, vendorModel, apiKey, context);
+            RoutifyResponse response = chatAdapter.chat(request, vendorModel, vendor, apiKey, context);
             success = true; //TODO 此处是否成功需要写逻辑判断 或者失败则由子类抛异常
             return response;
         } catch (Exception e) {

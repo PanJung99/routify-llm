@@ -5,29 +5,61 @@ import io.github.panjung99.routify.core.client.StreamResponseHandler;
 import io.github.panjung99.routify.core.model.dto.RoutifyRequest;
 import io.github.panjung99.routify.core.model.dto.RoutifyResponse;
 import io.github.panjung99.routify.core.model.entity.ApiKey;
+import io.github.panjung99.routify.core.model.entity.Vendor;
 import io.github.panjung99.routify.core.model.entity.VendorModel;
 
+/**
+ * Base class for {@link ChatAdapter} implementations.
+ * <p>
+ * This class provides a template for vendor-specific chat adapters,
+ * delegating the core execution logic to protected "doChat" methods
+ * which must be implemented by subclasses.
+ */
 public abstract class AbstractChatAdapter implements ChatAdapter {
 
     /**
-     * 子类实现具体的厂商调用逻辑。
-     * @param request 请求对象
-     * @param model 服务商模型
-     * @param apiKey 使用的 API Key
-     * @param context 路由上下文（包含记录器、指标等）
-     * @return 响应对象
+     * Subclasses must implement this method to handle the actual
+     * non-streaming chat with the specific LLM vendor.
+     *
+     * @see #chat(RoutifyRequest, VendorModel, Vendor, ApiKey, RoutingContext)
+     *
+     * @param request The unified chat request.
+     * @param model The specific vendor model configuration.
+     * @param vendor The vendor metadata.
+     * @param apiKey The API key for authentication.
+     * @param context The current routing context and metadata.
+     * @return The standardized response from the vendor.
      */
-    protected abstract RoutifyResponse doChat(RoutifyRequest request, VendorModel model, ApiKey apiKey, RoutingContext context);
+    protected abstract RoutifyResponse doChat(RoutifyRequest request, VendorModel model, Vendor vendor, ApiKey apiKey, RoutingContext context);
 
-    protected abstract void doChatStream(RoutifyRequest request, VendorModel model, ApiKey apiKey, RoutingContext context, StreamResponseHandler handler);
+    /**
+     * Subclasses must implement this method to handle the actual
+     * streaming chat with the specific LLM vendor.
+     *
+     * @see #chatStream(RoutifyRequest, VendorModel, Vendor, ApiKey, RoutingContext, StreamResponseHandler)
+     *
+     * @param request The unified chat request.
+     * @param model The specific vendor model configuration.
+     * @param vendor The vendor metadata.
+     * @param apiKey The API key for authentication.
+     * @param context The current routing context and metadata.
+     * @param handler Callback handler for processing stream events.
+     */
+    protected abstract void doChatStream(RoutifyRequest request, VendorModel model, Vendor vendor, ApiKey apiKey, RoutingContext context, StreamResponseHandler handler);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public final RoutifyResponse chat(RoutifyRequest request, VendorModel model, ApiKey apiKey, RoutingContext context) {
-        return doChat(request, model, apiKey, context);
+    public final RoutifyResponse chat(RoutifyRequest request, VendorModel model, Vendor vendor, ApiKey apiKey, RoutingContext context) {
+        return doChat(request, model, vendor, apiKey, context);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void chatStream(RoutifyRequest request, VendorModel model, ApiKey apiKey, RoutingContext context, StreamResponseHandler handler) {
-
+    public void chatStream(RoutifyRequest request, VendorModel model, Vendor vendor, ApiKey apiKey, RoutingContext context, StreamResponseHandler handler) {
+        doChatStream(request, model, vendor, apiKey, context, handler);
     }
 }
