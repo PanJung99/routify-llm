@@ -18,7 +18,7 @@ public class RoundRobinVendorRoutingStrategy extends AbstractVendorRoutingStrate
             return null;
         }
         
-        int index = currentIndex.getAndUpdate(i -> (i + 1) % vendorModels.size());
+        int index = Math.floorMod(currentIndex.getAndIncrement(), vendorModels.size());
         return vendorModels.get(index);
     }
 }

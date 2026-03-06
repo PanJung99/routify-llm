@@ -4,7 +4,6 @@ import io.github.panjung99.routify.core.model.entity.*;
 import io.github.panjung99.routify.core.model.enums.ModelCategory;
 import io.github.panjung99.routify.core.model.enums.VendorType;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 

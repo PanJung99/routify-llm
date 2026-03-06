@@ -1,6 +1,5 @@
 package io.github.panjung99.routify.core.model.entity;
 
-import io.github.panjung99.routify.core.model.enums.ModelCategory;
 import lombok.Data;
 
 import java.util.List;
